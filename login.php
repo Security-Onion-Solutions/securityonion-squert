@@ -2,7 +2,7 @@
 
 //
 //
-//      Copyright (C) 2012 Paul Halliday <paul.halliday@gmail.com>
+//      Copyright (C) 2016 Paul Halliday <paul.halliday@gmail.com>
 //
 //      This program is free software: you can redistribute it and/or modify
 //      it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 //
 //
 
-include_once '.inc/config.php';
+include '.inc/config.php';
 
 $username = $password = $err = '';
 $focus = 'username';
@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $rqaddr  .= mt_rand(0,$max);
     $ua      .= mt_rand(0,$max);
     $cmpid    = $rqt . $rqaddr . $ua;
+    $styleSelect = $_REQUEST['styleSelect'];
     $id       = md5($cmpid);
     $db = mysql_connect($dbHost,$dbUser,$dbPass);
     $link = mysql_select_db($dbName, $db);
@@ -92,13 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                 $_SESSION['sTab']       = 't_sum';
                 $_SESSION['id']         = $id;
                 
-	        header ("Location: index.php?id=$id");
+	        header ("Location: $styleSelect?id=$id");
             } else {
-                $err = 'The user name or password is incorrect.';
+                $err = '<br>Wrong - Try again<br><br>';
                 $focus = 'username';
             }
         } else {   
-            $err = 'The user name or password is incorrect.';
+            $err = '<br>Wrong - Try again<br><br>';
             $focus = 'username';     
         }
     } else {
@@ -110,28 +111,62 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
    "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-<title>Please login to continue</title>
-<style type="text/css" media="screen">@import ".css/login.css";</style>
+<title>Squert - Login</title>
+<style type="text/css" media="screen">@import ".css/login-blue.css";</style>
 <script type="text/javascript" src=".js/jq.js"></script>
 </head>
 <body>
 <form name=credcheck method=post action=login.php>
-<div class=box>
-<table class=boxes width=450 align=center cellpadding=1 cellspacing=0>
-<tr><td colspan=2 class=header>
-squert - Please login to continue</td></tr>
-<tr><td colspan=2 class=boxes>
-Username<br>
-<input class=in type=text name=username value="<?php echo htmlentities($username);?>" maxlength="32"></td></tr>
-<tr><td colspan=2 class=boxes>
-Password<br>
-<input class=in type=password name=password value="" maxlength="32"></td></tr>
-<tr><td class=boxes>
-<input id=logmein name=logmein class=rb type=submit name=login value=submit><br><br></td>
-<td class=err><?php echo $err;?></td></tr>
+<br><br><br><br>
+
+<table class=boxes width=250 align=center cellpadding=1 cellspacing=0>
+	<tr>
+		<td colspan=2 class=header>
+		Squert Network Security
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=header2>
+		Note: Chrome or Firefox only
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=boxes>
+		Style Selection
+		</td>
+	</tr>
+	<tr>
+		<td class=boxes>
+		&nbsp;&nbsp;&nbsp;<input type=radio name="styleSelect" value="index-blue.php" checked> Blue
+		</td>
+		<td class=boxes>
+		<input type=radio name="styleSelect" value="index.php"> Red
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=boxes>
+		<hr size=1 width=206 align=left>
+		Username<br>
+		<input class=in type=text name=username value="<?php echo htmlentities($username);?>" maxlength="30">
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=boxes>
+		Password<br>
+		<input class=in type=password name=password value="" maxlength="30">
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=boxes align=right>
+		<input id=logmein name=logmein class=rb type=submit name=login value=submit>
+		&nbsp;&nbsp;&nbsp;
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 class=err align=center><?php echo $err;?></td>
+	</tr>
 </table>
-<div class=cp>Version 1.6.3<span>&copy;2016 Paul Halliday</span></div>
-</div>
+<div class=cp><!-- Version 1.5.0 --><span></span></div>
 </form>
 <script type="text/javascript">document.credcheck.<?php echo $focus;?>.focus();</script>
 </body>
