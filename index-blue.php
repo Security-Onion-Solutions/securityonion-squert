@@ -63,7 +63,7 @@ dbC();
 <body>
 <div id=tab_group class=tab_group>
   <!-- <div id=t_sum class=tab>EVENTS</div> -->
-  <a href="javascript:window.location.href=window.location.href"><div id=t_sum class=tab>EVENTS</div></a>
+  <a href="javascript:window.location.href=window.location.href.split('#')[0]"><div id=t_sum class=tab>EVENTS</div></a>
   <!--div id=t_inc class=tab>INCIDENTS</div-->
   <div id=t_ovr class=tab>SUMMARY</div>
   <!-- <div id=t_view class=tab>VIEWS</div> -->
