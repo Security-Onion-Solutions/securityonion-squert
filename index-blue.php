@@ -216,8 +216,8 @@ dbC();
     </div>
 
     <div class=event_cont>
-      <div class=label_l><span class=ec_label>EVENT PRIORITY</span><div class=label_m><img data-sec=p title=show\hide class="il st" src=.css/darr.png></div></div>
-      <div class=secl id=sec_p">
+      <div class=label_l><span class=ec_label>EVENT PRIORITY</span><div class=label_m><img data-sec=p title=show\hide class="il st" src=.css/uarr.png></div></div>
+      <div class=secl id=sec_p>
         <div class=priority_filter></div>
         <div class=label_p><span class="label_p-high">High</span></div><div id=pr_1 class=value>-</div>
         <div class=label_p><span class="label_p-med">Medium</span></div><div id=pr_2 class=value>-</div>
