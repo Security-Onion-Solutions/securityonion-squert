@@ -346,9 +346,9 @@ function level1() {
   // build statement
   $statement = "SELECT COUNT(event.signature) AS count,
     MAX(CONVERT_TZ(event.timestamp,'+00:00', :maxoffset)) AS maxTime,
-    INET_NTOA(event.src_ip) AS src_ip,
+    INET6_NTOA(event.src_ip) AS src_ip,
     msrc.c_long AS src_cc,
-    INET_NTOA(event.dst_ip) AS dst_ip,
+    INET6_NTOA(event.dst_ip) AS dst_ip,
     mdst.c_long AS dst_cc,
     msrc.cc AS srcc,
     mdst.cc AS dstc,
@@ -418,9 +418,9 @@ function level2() {
   // build statement using $qp2
   $statement = "SELECT event.status AS f1, 
     CONCAT_WS(',',CONVERT_TZ(event.timestamp,'+00:00',:concatoffset),event.timestamp) AS f2,
-    INET_NTOA(event.src_ip) AS f3,
+    INET6_NTOA(event.src_ip) AS f3,
     event.src_port AS f4,
-    INET_NTOA(event.dst_ip) AS f5,
+    INET6_NTOA(event.dst_ip) AS f5,
     event.dst_port AS f6, 
     event.sid AS f7,
     event.cid AS f8,
@@ -466,11 +466,11 @@ function level2a() {
   // build statement
   $statement = "SELECT event.status AS f1, 
     CONCAT_WS(',',CONVERT_TZ(event.timestamp,'+00:00',:concatoffset),event.timestamp) AS f2,
-    INET_NTOA(event.src_ip) AS f3,
+    INET6_NTOA(event.src_ip) AS f3,
     event.src_port AS f4, 
     msrc.c_long AS f5,
     msrc.cc AS f6,          
-    INET_NTOA(event.dst_ip) AS f7, 
+    INET6_NTOA(event.dst_ip) AS f7, 
     event.dst_port AS f8,
     mdst.c_long AS f9,
     mdst.cc AS f10,
@@ -522,8 +522,8 @@ function payload() {
   $comp = $_REQUEST['object'];
   list($sid,$cid) = explode("-", $comp);
 
-  $statement = "SELECT INET_NTOA(event.src_ip), 
-              INET_NTOA(event.dst_ip),
+  $statement = "SELECT INET6_NTOA(event.src_ip), 
+              INET6_NTOA(event.dst_ip),
               event.ip_ver, event.ip_hlen, event.ip_tos,
               event.ip_len, event.ip_id, event.ip_flags,
               event.ip_off, event.ip_ttl, event.ip_csum,
@@ -855,9 +855,9 @@ function map() {
     LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
     LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip 
     $qp2
-    AND src_ip NOT BETWEEN 167772160 AND 184549375
-    AND src_ip NOT BETWEEN 2886729728 AND 2886795263
-    AND src_ip NOT BETWEEN 3232235520 AND 3232301055
+    AND src_ip NOT BETWEEN INET6_ATON('10.0.0.0') AND INET6_ATON('10.255.255.255')
+    AND src_ip NOT BETWEEN INET6_ATON('172.16.0.0') AND INET6_ATON('172.31.255.255')
+    AND src_ip NOT BETWEEN INET6_ATON('192.168.0.0') AND INET6_ATON('192.168.255.255')
     AND msrc.cc IS NOT NULL
     GROUP BY msrc.cc
     ORDER BY c DESC";
@@ -867,9 +867,9 @@ function map() {
     LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
     LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip 
     $qp2
-    AND dst_ip NOT BETWEEN 167772160 AND 184549375
-    AND dst_ip NOT BETWEEN 2886729728 AND 2886795263
-    AND dst_ip NOT BETWEEN 3232235520 AND 3232301055
+    AND dst_ip NOT BETWEEN INET6_ATON('10.0.0.0') AND INET6_ATON('10.255.255.255')
+    AND dst_ip NOT BETWEEN INET6_ATON('172.16.0.0') AND INET6_ATON('172.31.255.255')
+    AND dst_ip NOT BETWEEN INET6_ATON('192.168.0.0') AND INET6_ATON('192.168.255.255')
     AND mdst.cc IS NOT NULL
     GROUP BY mdst.cc
     ORDER BY c DESC";
@@ -1069,7 +1069,7 @@ function summary() {
       COUNT(DISTINCT(event.{$oppip}_ip)) AS f3,
       m{$cleansubtype}.cc AS f4, 
       m{$cleansubtype}.c_long AS f5,
-      INET_NTOA(event.{$cleansubtype}_ip) AS f6,
+      INET6_NTOA(event.{$cleansubtype}_ip) AS f6,
       o{$cleansubtype}.value AS f7 
       FROM event
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
@@ -1117,9 +1117,9 @@ function summary() {
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
       LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip
       $qp2
-      AND event.{$cleansubtype}_ip NOT BETWEEN 167772160 AND 184549375
-      AND event.{$cleansubtype}_ip NOT BETWEEN 2886729728 AND 2886795263 
-      AND event.{$cleansubtype}_ip NOT BETWEEN 3232235520 AND 3232301055
+      AND event.{$cleansubtype}_ip NOT BETWEEN INET6_ATON('10.0.0.0') AND INET6_ATON('10.255.255.255')
+      AND event.{$cleansubtype}_ip NOT BETWEEN INET6_ATON('172.16.0.0') AND INET6_ATON('172.31.255.255')
+      AND event.{$cleansubtype}_ip NOT BETWEEN INET6_ATON('192.168.0.0') AND INET6_ATON('192.168.255.255')
       AND m{$cleansubtype}.cc IS NOT NULL GROUP BY m{$cleansubtype}.cc ORDER BY f1 DESC"; 
     break; 
   }
@@ -1162,54 +1162,54 @@ function view() {
 
   switch ($type) {
   case "ip":
-    $statement = "SELECT CONCAT_WS('|', INET_NTOA(event.src_ip), msrc.cc, msrc.c_long) AS source,
-      CONCAT_WS('|', INET_NTOA(event.dst_ip), mdst.cc, mdst.c_long) AS target,
+    $statement = "SELECT CONCAT_WS('|', INET6_NTOA(event.src_ip), msrc.cc, msrc.c_long) AS source,
+      CONCAT_WS('|', INET6_NTOA(event.dst_ip), mdst.cc, mdst.c_long) AS target,
       COUNT(event.src_ip) AS value
       FROM event
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
       LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip 
       $qp2 
-      AND (INET_NTOA(event.src_ip) != '0.0.0.0' AND INET_NTOA(event.dst_ip) != '0.0.0.0')
+      AND (INET6_NTOA(event.src_ip) != '0.0.0.0' AND INET6_NTOA(event.dst_ip) != '0.0.0.0')
       GROUP BY source,target";
     break;
   case "ips":
-    $statement = "SELECT CONCAT_WS('|', INET_NTOA(event.src_ip), msrc.cc, msrc.c_long) AS source,
+    $statement = "SELECT CONCAT_WS('|', INET6_NTOA(event.src_ip), msrc.cc, msrc.c_long) AS source,
       event.signature AS sig,
-      CONCAT_WS('|', INET_NTOA(event.dst_ip), mdst.cc, mdst.c_long) AS target,
+      CONCAT_WS('|', INET6_NTOA(event.dst_ip), mdst.cc, mdst.c_long) AS target,
       COUNT(event.src_ip) AS value
       FROM event
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
       LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip 
       $qp2 
-      AND (INET_NTOA(event.src_ip) != '0.0.0.0' AND INET_NTOA(event.dst_ip) != '0.0.0.0')
+      AND (INET6_NTOA(event.src_ip) != '0.0.0.0' AND INET6_NTOA(event.dst_ip) != '0.0.0.0')
       GROUP BY source,target";
     break;
   case "sc":
     $statement = "SELECT CONCAT_WS('|' ,msrc.c_long, msrc.cc) AS source,
-      CONCAT_WS('|',INET_NTOA(event.dst_ip), mdst.cc) AS target,
+      CONCAT_WS('|',INET6_NTOA(event.dst_ip), mdst.cc) AS target,
       COUNT(event.src_ip) AS value
       FROM event
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
       LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip
       $qp2
-      AND (INET_NTOA(event.src_ip) != '0.0.0.0' AND INET_NTOA(event.dst_ip) != '0.0.0.0')
-      AND event.src_ip NOT BETWEEN 167772160 AND 184549375
-      AND event.src_ip NOT BETWEEN 2886729728 AND 2886795263
-      AND event.src_ip NOT BETWEEN 3232235520 AND 3232301055
+      AND (INET6_NTOA(event.src_ip) != '0.0.0.0' AND INET6_NTOA(event.dst_ip) != '0.0.0.0')
+      AND event.src_ip NOT BETWEEN INET6_ATON('10.0.0.0') AND INET6_ATON('10.255.255.255')
+      AND event.src_ip NOT BETWEEN INET6_ATON('172.16.0.0') AND INET6_ATON('172.31.255.255')
+      AND event.src_ip NOT BETWEEN INET6_ATON('192.168.0.0') AND INET6_ATON('192.168.255.255')
       GROUP BY source,target";
     break;   
   case "dc":
-    $statement = "SELECT CONCAT_WS('|', INET_NTOA(event.src_ip), msrc.cc) AS source,
+    $statement = "SELECT CONCAT_WS('|', INET6_NTOA(event.src_ip), msrc.cc) AS source,
       CONCAT_WS('|', mdst.c_long, mdst.cc) AS target,
       COUNT(event.dst_ip) AS value
       FROM event
       LEFT JOIN mappings AS msrc ON event.src_ip = msrc.ip
       LEFT JOIN mappings AS mdst ON event.dst_ip = mdst.ip
       $qp2
-      AND (INET_NTOA(event.src_ip) != '0.0.0.0' AND INET_NTOA(event.dst_ip) != '0.0.0.0')
-      AND event.dst_ip NOT BETWEEN 167772160 AND 184549375
-      AND event.dst_ip NOT BETWEEN 2886729728 AND 2886795263
-      AND event.dst_ip NOT BETWEEN 3232235520 AND 3232301055
+      AND (INET6_NTOA(event.src_ip) != '0.0.0.0' AND INET6_NTOA(event.dst_ip) != '0.0.0.0')
+      AND event.dst_ip NOT BETWEEN INET6_ATON('10.0.0.0') AND INET6_ATON('10.255.255.255')
+      AND event.dst_ip NOT BETWEEN INET6_ATON('172.16.0.0') AND INET6_ATON('172.31.255.255')
+      AND event.dst_ip NOT BETWEEN INET6_ATON('192.168.0.0') AND INET6_ATON('192.168.255.255')
       GROUP BY source,target";
     break;    
   }
@@ -1636,14 +1636,14 @@ function objhistory () {
   break;
 
   case 1: 
-    $subject = "(src_ip = INET_ATON('$object') OR dst_ip = INET_ATON('$object'))"; 
+    $subject = "(src_ip = INET6_ATON('$object') OR dst_ip = INET6_ATON('$object'))"; 
     $statement = "SELECT
       DATE(CONVERT_TZ(event.timestamp,'+00:00', :offset1)) AS day,
       HOUR(CONVERT_TZ(event.timestamp,'+00:00', :offset2)) AS hour,
       COUNT(event.timestamp) AS value
       FROM event 
       WHERE event.timestamp BETWEEN CONVERT_TZ(:sdatetime1,:offset3,'+00:00') - INTERVAL 6 DAY AND CONVERT_TZ(:sdatetime2,:offset4,'+00:00') + INTERVAL 1 DAY 
-      AND (src_ip = INET_ATON(:object1) OR dst_ip = INET_ATON(:object2))
+      AND (src_ip = INET6_ATON(:object1) OR dst_ip = INET6_ATON(:object2))
       GROUP BY day,hour
       ORDER BY day ASC";
     $params = [":offset1" => "$offset", ":offset2" => "$offset", ":sdatetime1" => "$sdatetime", ":offset3" => "$offset", ":sdatetime2" => "$sdatetime", ":offset4" => "$offset", ":object1" => "$object", ":object2" => "$object"];
@@ -1670,7 +1670,7 @@ function objhistory () {
         signature_id AS sid
         FROM event
         WHERE event.timestamp BETWEEN CONVERT_TZ(:sdatetime1,:offset1,'+00:00') - INTERVAL 6 DAY AND CONVERT_TZ(:sdatetime2,:offset2,'+00:00') + INTERVAL 1 DAY
-        AND (src_ip = INET_ATON(:object1) OR dst_ip = INET_ATON(:object2))
+        AND (src_ip = INET6_ATON(:object1) OR dst_ip = INET6_ATON(:object2))
         GROUP BY signature_id
         ORDER BY value DESC";
 

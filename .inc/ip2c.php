@@ -47,9 +47,10 @@ function IP2C($string) {
         while ($row = mysqli_fetch_row($list)) {
             $ip  = $row[0];
             $dot = long2ip((float)$ip);
-            $ipLookup = mysqli_query($db,"SELECT registry, cc, c_long, type, date, status FROM ip2c WHERE
-                                     $ip >=start_ip AND $ip <= end_ip LIMIT 1");
+            $statement = "SELECT registry, cc, c_long, type, date, status FROM ip2c WHERE
+                          INET6_ATON('$ip') >=start_ip AND INET6_ATON('$ip') <= end_ip LIMIT 1";
 
+            $ipLookup = mysqli_query($db, $statement);
             $result = mysqli_fetch_array($ipLookup);
 
             if ($result) {
@@ -60,8 +61,9 @@ function IP2C($string) {
                 $date           = $result[4];
                 $status         = $result[5];
 
-                mysqli_query($db,"REPLACE INTO mappings (registry,cc,c_long,type,ip,date,status)
-                             VALUES (\"$registry\",\"$cc\",\"$c_long\",\"$type\",\"$ip\",\"$date\",\"$status\")");
+		$statement = "REPLACE INTO mappings (registry,cc,c_long,type,ip,date,status)
+                             VALUES (\"$registry\",\"$cc\",\"$c_long\",\"$type\",INET6_ATON(\"$ip\"),\"$date\",\"$status\")";
+                mysqli_query($db, $statement);
                 echo "-- Mapped $dot ($ip) to $cc ($c_long)\n";
             }
             
@@ -73,9 +75,9 @@ function IP2C($string) {
 
     // DB Connect
     global $db;
-    $sipList = mysqli_query($db,"SELECT DISTINCT(e.src_ip) FROM event AS e LEFT JOIN mappings AS m ON e.src_ip=m.ip
+    $sipList = mysqli_query($db,"SELECT DISTINCT(INET6_NTOA(e.src_ip)) FROM event AS e LEFT JOIN mappings AS m ON e.src_ip=m.ip
                             WHERE (m.ip IS NULL OR m.cc = '01')");
-    $dipList = mysqli_query($db,"SELECT DISTINCT(e.dst_ip) FROM event AS e LEFT JOIN mappings AS m ON e.dst_ip=m.ip
+    $dipList = mysqli_query($db,"SELECT DISTINCT(INET6_NTOA(e.dst_ip)) FROM event AS e LEFT JOIN mappings AS m ON e.dst_ip=m.ip
                             WHERE (m.ip IS NULL OR m.cc = '01')");
     $sipCount = $dipCount = 0;
     if ($sipList) {
