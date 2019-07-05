@@ -60,6 +60,18 @@ if [catch {package require Tclx} tclxVersion] {
     exit
 }
 
+### Load ip from tcllib
+if [catch {package require ip} ipVersion] {
+    puts "Error: Package ip from tcllib not found"
+    exit
+}
+
+### Load textutil from tcllib
+if [catch {package require textutil} textutilVersion] {
+    puts "Error: Package textutil from tcllib not found"
+    exit
+}
+
 ### Load mysql support.
 if [catch {package require mysqltcl} mysqltclVersion] {
     puts "Error: Package mysqltcl not found"
@@ -104,6 +116,33 @@ proc popMysql { query } {
     }
 }
 
+
+
+proc getBroadcast {start value ipv} {
+    if { $ipv == "ipv4" } {
+	set netmask [expr 32 - [format %.f [expr {log($value)/log(2)}] ]]
+        return [ip::broadcastAddress $start/$netmask]
+    } else {
+        set hostpart ""
+        set reminder [expr 128 - $value]
+        set hostpart [string repeat 0 $value]
+        append hostpart [string repeat 1 $reminder]
+        set normIP [ip::normalize $start]
+        set ipparts [split $normIP ":"]
+        set binip ""
+        foreach part $ipparts {
+                binary scan [binary format H* $part] B* bits
+                append binip $bits
+        }
+
+        set bbin [expr (0b$binip | 0b$hostpart)]
+        set bhex [format %032llx $bbin]
+        set bcast [join [textutil::splitn $bhex 4] :]
+
+        return $bcast
+    }
+}
+
 ### Process data
 proc proData { data fileID } {
 
@@ -114,20 +153,24 @@ proc proData { data fileID } {
     close $fp
 
     ### Line counters
-    set yesCount 0
+    set ipv4yesCount 0
+    set ipv6yesCount 0
     set noCount 0
    
     foreach line $rawData {   
         set line [split $line |]
     
-        #### Strip !IPv4 lines and lines w/o enough fields (headers and comments)
+        #### Strip !IPv4/6 lines and lines w/o enough fields (headers and comments)
         set test1 [lindex $line 2]
         set test2 [llength $line]
         set test3 [lindex $line 1] 
     
         if {$test1 == "ipv4" && $test2 >= 7 } {
             set go yes
-            set yesCount [expr $yesCount + 1]
+            set ipv4yesCount [expr $ipv4yesCount + 1]
+        } elseif {$test1 == "ipv6" && $test2 >= 7 } {
+            set go yes
+            set ipv6yesCount [expr $ipv6yesCount + 1]
         } else {
             set go no
             set noCount [expr $noCount + 1]
@@ -137,15 +180,14 @@ proc proData { data fileID } {
             ### We do start and value first because we need to calculate end
             set start [lindex $line 3]                   
             set value [lindex $line 4]
-            
-            ### Convert IP's to integers                   
-            set result [ipLong $start $value]            
-                                                         
+
+	    set endip [getBroadcast $start $value $test1]
+
             ### We can now build the results               
             set registry [lindex $line 0]                
             set type [lindex $line 2]                    
-            set start [lindex $result 0]                 
-            set end [lindex $result 1]                   
+            set start [lindex $line 3]
+            set end $endip
             set date [lindex $line 5]                    
             set status [lindex $line 6]
 
@@ -162,7 +204,9 @@ proc proData { data fileID } {
     }
 
     ### Display counts.
-    puts "Processed $yesCount IPv4 records and skipped $noCount.\n"
+    puts "Processed $ipv4yesCount IPv4 records."
+    puts "Processed $ipv6yesCount IPv4 records."
+    puts "Skipped $noCount records.\n"
 
 }
 
@@ -440,7 +484,9 @@ if {$a == 1} {
     }
 
     puts "Updating database.."
-    popMysql "LOAD DATA LOCAL INFILE '$workDir/$resultsFile' REPLACE INTO TABLE $DBNAME.$DBTABLE FIELDS TERMINATED BY '||'"
+    popMysql "LOAD DATA LOCAL INFILE '$workDir/$resultsFile' REPLACE INTO TABLE $DBNAME.$DBTABLE FIELDS TERMINATED BY '||' \
+		(registry,cc,c_long,type,@var5,@var6,date,status) \
+		SET start_ip = INET6_ATON(@var5), end_ip = INET6_ATON(@var6)"
 
     if {[file exists $resultsFile]} {
         file delete -force $resultsFile
