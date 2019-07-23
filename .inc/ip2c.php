@@ -46,9 +46,15 @@ function IP2C($string) {
 	global $db;
         while ($row = mysqli_fetch_row($list)) {
             $ip  = $row[0];
+            if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+		$iptype = "ipv4";
+            } else if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                $iptype = "ipv6";
+            }
             $dot = long2ip((float)$ip);
             $statement = "SELECT registry, cc, c_long, type, date, status FROM ip2c WHERE
-                          INET6_ATON('$ip') >=start_ip AND INET6_ATON('$ip') <= end_ip LIMIT 1";
+                          INET6_ATON('$ip') >=start_ip AND INET6_ATON('$ip') <= end_ip AND
+                          type = '$iptype' LIMIT 1";
 
             $ipLookup = mysqli_query($db, $statement);
             $result = mysqli_fetch_array($ipLookup);
