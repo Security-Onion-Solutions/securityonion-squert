@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS ip2c
   cc		VARCHAR(2),
   c_long	VARCHAR(255),
   type		VARCHAR(4),
-  start_ip	INT UNSIGNED NOT NULL DEFAULT 0,
-  end_ip	INT UNSIGNED NOT NULL DEFAULT 0,
+  start_ip	VARBINARY(16) NOT NULL DEFAULT 0,
+  end_ip	VARBINARY(16) NOT NULL DEFAULT 0,
   date		DATETIME,
   status	VARCHAR(25),
   INDEX registry (registry),
@@ -17,13 +17,13 @@ CREATE TABLE IF NOT EXISTS ip2c
 );  
 
 INSERT IGNORE INTO ip2c (registry,cc,c_long,type,start_ip,end_ip,date,status)
-VALUES ('RFC1918','LO','RFC1918','ipv4','167772160','184549375','1996-02-01','allocated');
+VALUES ('RFC1918','LO','RFC1918','ipv4',INET6_ATON('10.0.0.0'),INET6_ATON('10.255.255.255'),'1996-02-01','allocated');
 
 INSERT IGNORE INTO ip2c (registry,cc,c_long,type,start_ip,end_ip,date,status)
-VALUES ('RFC1918','LO','RFC1918','ipv4','2886729728','2886795263','1996-02-01','allocated');
+VALUES ('RFC1918','LO','RFC1918','ipv4',INET6_ATON('172.16.0.0'),INET6_ATON('172.31.255.255'),'1996-02-01','allocated');
 
 INSERT IGNORE INTO ip2c (registry,cc,c_long,type,start_ip,end_ip,date,status)
-VALUES ('RFC1918','LO','RFC1918','ipv4','3232235520','3232301055','1996-02-01','allocated');
+VALUES ('RFC1918','LO','RFC1918','ipv4',INET6_ATON('192.168.0.0'),INET6_ATON('192.168.255.255'),'1996-02-01','allocated');
 
 CREATE TABLE IF NOT EXISTS mappings
 (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS mappings
   cc             VARCHAR(2),
   c_long         VARCHAR(255),
   type           VARCHAR(4),
-  ip             INT UNSIGNED NOT NULL DEFAULT 0,
+  ip             VARBINARY(16) NOT NULL DEFAULT 0,
   date           DATETIME,
   status         VARCHAR(25),
   age            TIMESTAMP,
